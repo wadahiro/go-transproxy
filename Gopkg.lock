@@ -8,6 +8,12 @@
   version = "1.0.2"
 
 [[projects]]
+  name = "github.com/coreos/go-iptables"
+  packages = ["iptables"]
+  revision = "259c8e6a4275d497442c721fa52204d7a58bde8b"
+  version = "v0.2.0"
+
+[[projects]]
   name = "github.com/cybozu-go/cmd"
   packages = ["."]
   revision = "8d1ed337c3fbd89755769e1c2384fb66b76e4961"
@@ -76,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b8975479217cff9bee3787044f8bddbed40ea7e86d3ca32a5eeb89cac790bc68"
+  inputs-digest = "7d51597af85863380548c0bc32eee2579545dcc0cb39da62af8c37cce604d6fd"
   solver-name = "gps-cdcl"
   solver-version = 1

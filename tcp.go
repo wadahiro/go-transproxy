@@ -45,7 +45,7 @@ func (s TCPProxy) Run() error {
 
 	npdialer := proxy.Direct
 
-	log.Infof("Tcp-Proxy: Run listener on %s", s.ListenAddress)
+	log.Infof("TCP-Proxy: Run listener on %s", s.ListenAddress)
 
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {

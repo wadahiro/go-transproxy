@@ -24,16 +24,16 @@ type DNSProxyConfig struct {
 	EnableUDP      bool
 	EnableTCP      bool
 	Endpoint       string
-	InternalDNS    string
+	PrivateDNS     string
 	NoProxyDomains []string
 }
 
 func NewDNSProxy(c DNSProxyConfig) *DNSProxy {
 
 	// fix internal dns address
-	if c.InternalDNS != "" {
-		if !strings.HasSuffix(c.InternalDNS, ":53") {
-			c.InternalDNS += ":53"
+	if c.PrivateDNS != "" {
+		if !strings.HasSuffix(c.PrivateDNS, ":53") {
+			c.PrivateDNS += ":53"
 		}
 	}
 
@@ -66,8 +66,8 @@ func NewDNSProxy(c DNSProxyConfig) *DNSProxy {
 }
 
 func (s *DNSProxy) Run() error {
-	log.Infof("Starting DNS service on %s", s.ListenAddress)
-	log.Infof("Use internal DNS %s for %s domains", s.InternalDNS, s.NoProxyDomains)
+	log.Infof("DNS-Proxy: Run listener on %s", s.ListenAddress)
+	log.Infof("DNS-Proxy: Use private DNS %s for %s domains", s.PrivateDNS, s.NoProxyDomains)
 
 	// Prepare external DNS handler
 	provider, err := secop.NewGDNSProvider(s.Endpoint, &secop.GDNSOptions{
@@ -87,17 +87,17 @@ func (s *DNSProxy) Run() error {
 			dns.HandleFailed(w, req)
 			return
 		}
-		// Resolve by Internal DNSProxy
+		// Resolve by proxied private DNS
 		for _, domain := range s.NoProxyDomains {
-			log.Infof("Matching DNS route,  %s : %s\n", req.Question[0].Name, domain)
+			log.Debugf("Matching DNS route,  %s : %s", req.Question[0].Name, domain)
 			if strings.HasSuffix(req.Question[0].Name, domain) {
-				log.Info("Matched! Routing to internal DNS")
-				s.handleInternal(w, req)
+				log.Debug("Matched! Routing to private DNS, %s : %s", req.Question[0].Name, domain)
+				s.handlePrivate(w, req)
 				return
 			}
 		}
 
-		// Resolve by External DNS over HTTPS
+		// Resolve by public DNS over HTTPS over http proxy
 		externalHandler.Handle(w, req)
 	}
 
@@ -136,7 +136,7 @@ func (s *DNSProxy) Run() error {
 	return nil
 }
 
-func (s *DNSProxy) handleInternal(w dns.ResponseWriter, req *dns.Msg) {
+func (s *DNSProxy) handlePrivate(w dns.ResponseWriter, req *dns.Msg) {
 	var c *dns.Client
 	if _, ok := w.RemoteAddr().(*net.TCPAddr); ok {
 		c = s.tcpClient
@@ -146,7 +146,7 @@ func (s *DNSProxy) handleInternal(w dns.ResponseWriter, req *dns.Msg) {
 
 	log.Infof("DNS request. %#v, %s", req, req)
 
-	resp, _, err := c.Exchange(req, s.InternalDNS)
+	resp, _, err := c.Exchange(req, s.PrivateDNS)
 	if err != nil {
 		log.Warnf("DNS Client failed. %s, %#v, %s", err.Error(), req, req)
 		dns.HandleFailed(w, req)
