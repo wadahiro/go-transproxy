@@ -27,7 +27,7 @@ func NewHTTPSProxy(c HTTPSProxyConfig) *HTTPSProxy {
 	}
 }
 
-func (s HTTPSProxy) Run() error {
+func (s HTTPSProxy) Start() error {
 	dialer := &net.Dialer{
 		KeepAlive: 3 * time.Minute,
 		DualStack: true,
@@ -44,7 +44,7 @@ func (s HTTPSProxy) Run() error {
 
 	npdialer := proxy.Direct
 
-	log.Infof("HTTPS-Proxy: Run listener on %s", s.ListenAddress)
+	log.Infof("HTTPS-Proxy: Start listener on %s", s.ListenAddress)
 
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {
@@ -65,7 +65,7 @@ func (s HTTPSProxy) Run() error {
 
 				// TODO getting domain from origAddr, then check whether we should use proxy or not
 			} else {
-				log.Infof("HTTPS-Proxy: SNI: %s", origServer)
+				log.Debugf("HTTPS-Proxy: SNI: %s", origServer)
 				origServer = net.JoinHostPort(origServer, "443")
 			}
 

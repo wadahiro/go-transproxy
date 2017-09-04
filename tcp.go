@@ -26,7 +26,7 @@ func NewTCPProxy(c TCPProxyConfig) *TCPProxy {
 	}
 }
 
-func (s TCPProxy) Run() error {
+func (s TCPProxy) Start() error {
 	//pdialer := proxy.FromEnvironment()
 
 	dialer := &net.Dialer{
@@ -45,7 +45,7 @@ func (s TCPProxy) Run() error {
 
 	npdialer := proxy.Direct
 
-	log.Infof("TCP-Proxy: Run listener on %s", s.ListenAddress)
+	log.Infof("TCP-Proxy: Start listener on %s", s.ListenAddress)
 
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {

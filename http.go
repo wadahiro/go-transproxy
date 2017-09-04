@@ -21,6 +21,7 @@ type HTTPProxyConfig struct {
 	ListenAddress    string
 	NoProxyAddresses []string
 	NoProxyDomains   []string
+	Verbose          bool
 }
 
 func NewHTTPProxy(c HTTPProxyConfig) *HTTPProxy {
@@ -29,7 +30,7 @@ func NewHTTPProxy(c HTTPProxyConfig) *HTTPProxy {
 	}
 }
 
-func (s HTTPProxy) Run() error {
+func (s HTTPProxy) Start() error {
 	l, err := NewTCPListener(s.ListenAddress)
 	if err != nil {
 		log.Fatalf("HTTP-Proxy: Error listening for tcp connections - %s", err.Error())
@@ -37,10 +38,10 @@ func (s HTTPProxy) Run() error {
 
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.Tr.Proxy = httpProxyFromRule(s.NoProxyDomains, s.NoProxyAddresses)
-	proxy.Verbose = true
+	proxy.Verbose = s.Verbose
 
 	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Infof("HTTP-Proxy: Accept: %s, %s", req.Host, req.URL)
+		log.Debugf("HTTP-Proxy: Accept: %s, %s", req.Host, req.URL)
 		if req.Host == "" {
 			// TODO use origAddr from TCPCon
 			fmt.Fprintln(w, "Cannot handle requests without Host header, e.g., HTTP 1.0")
@@ -55,7 +56,7 @@ func (s HTTPProxy) Run() error {
 		proxy.ServeHTTP(w, req)
 	})
 
-	log.Infof("HTTP-Proxy: Run listener on %s", s.ListenAddress)
+	log.Infof("HTTP-Proxy: Start listener on %s", s.ListenAddress)
 
 	go func() {
 		http.Serve(l, proxy)

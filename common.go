@@ -85,7 +85,7 @@ var pool = sync.Pool{
 func Pipe(srcConn *TCPConn, destConn net.Conn) {
 	defer destConn.Close()
 
-	log.Info("Start proxy")
+	log.Debug("Start proxy")
 
 	wg := &sync.WaitGroup{}
 
@@ -123,7 +123,7 @@ func Pipe(srcConn *TCPConn, destConn net.Conn) {
 
 	wg.Wait()
 
-	log.Info("End proxy")
+	log.Debug("End proxy")
 }
 
 func httpProxyFromRule(noProxyDomains, noProxyAddresses []string) func(*http.Request) (*url.URL, error) {

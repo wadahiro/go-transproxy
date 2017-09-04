@@ -65,8 +65,8 @@ func NewDNSProxy(c DNSProxyConfig) *DNSProxy {
 	}
 }
 
-func (s *DNSProxy) Run() error {
-	log.Infof("DNS-Proxy: Run listener on %s", s.ListenAddress)
+func (s *DNSProxy) Start() error {
+	log.Infof("DNS-Proxy: Start listener on %s", s.ListenAddress)
 	log.Infof("DNS-Proxy: Use private DNS %s for %s domains", s.PrivateDNS, s.NoProxyDomains)
 
 	// Prepare external DNS handler
@@ -89,9 +89,9 @@ func (s *DNSProxy) Run() error {
 		}
 		// Resolve by proxied private DNS
 		for _, domain := range s.NoProxyDomains {
-			log.Debugf("Matching DNS route,  %s : %s", req.Question[0].Name, domain)
+			log.Debugf("DNS-Proxy: Matching DNS route,  %s : %s", req.Question[0].Name, domain)
 			if strings.HasSuffix(req.Question[0].Name, domain) {
-				log.Debug("Matched! Routing to private DNS, %s : %s", req.Question[0].Name, domain)
+				log.Debug("DNS-Proxy: Matched! Routing to private DNS, %s : %s", req.Question[0].Name, domain)
 				s.handlePrivate(w, req)
 				return
 			}
@@ -144,11 +144,11 @@ func (s *DNSProxy) handlePrivate(w dns.ResponseWriter, req *dns.Msg) {
 		c = s.udpClient
 	}
 
-	log.Infof("DNS request. %#v, %s", req, req)
+	log.Debugf("DNS-Proxy: DNS request. %#v, %s", req, req)
 
 	resp, _, err := c.Exchange(req, s.PrivateDNS)
 	if err != nil {
-		log.Warnf("DNS Client failed. %s, %#v, %s", err.Error(), req, req)
+		log.Warnf("DNS-Proxy: DNS Client failed. %s, %#v, %s", err.Error(), req, req)
 		dns.HandleFailed(w, req)
 		return
 	}
@@ -156,7 +156,7 @@ func (s *DNSProxy) handlePrivate(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 func (s *DNSProxy) Stop() {
-	log.Infof("Shutting down DNS service on interrupt\n")
+	log.Infof("DNS-Proxy: Shutting down DNS service on interrupt\n")
 
 	if s.udpServer != nil {
 		if err := s.udpServer.Shutdown(); err != nil {
