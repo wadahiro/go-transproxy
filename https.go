@@ -60,7 +60,7 @@ func (s HTTPSProxy) Start() error {
 			origServer := tlsConn.Host()
 			if origServer == "" {
 				log.Warn("HTTPS-Proxy: Cannot get SNI, so fallback using `SO_ORIGINAL_DST` or `IP6T_SO_ORIGINAL_DST`")
-				origServer = tc.OrigAddr
+				origServer = tc.OrigAddr // IPAddress:Port
 
 				// TODO getting domain from origAddr, then check whether we should use proxy or not
 			} else {
@@ -77,7 +77,7 @@ func (s HTTPSProxy) Start() error {
 			}
 
 			if err != nil {
-				log.Errorf("HTTPS-Proxy: Failed to connect to destination - %s", err.Error())
+				log.Warnf("HTTPS-Proxy: Failed to connect to destination - %s", err.Error())
 				return
 			}
 

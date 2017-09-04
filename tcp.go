@@ -49,6 +49,7 @@ func (s TCPProxy) Start() error {
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {
 			var destConn net.Conn
+			// TODO Convert OrigAddr to domain and check useProxy with domain too?
 			if useProxy(s.NoProxy, strings.Split(tc.OrigAddr, ":")[0]) {
 
 				destConn, err = pdialer.Dial("tcp", tc.OrigAddr)
