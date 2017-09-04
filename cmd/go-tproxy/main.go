@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/wadahiro/go-tproxy"
 	"math/rand"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -28,12 +29,6 @@ var (
 		"info",
 		"Log level, one of: debug, info, warn, error, fatal, panic",
 	)
-
-	noProxyAddresses = fs.String("no-proxy-addresses", "",
-		"List of no proxy ip addresses, as `192.168.0.10` or `192.168.0.0/24`")
-
-	noProxyDomains = fs.String("no-proxy-domains", "",
-		"List of noproxy subdomains")
 
 	dnsPrivateServer = fs.String("private-dns", "",
 		"Private DNS address for no_proxy targets (IP[:port])")
@@ -91,12 +86,18 @@ func main() {
 	log.SetFormatter(formatter)
 	log.SetLevel(level)
 
+	// handling no_proxy environment
+	noProxy := os.Getenv("no_proxy")
+	if noProxy == "" {
+		noProxy = os.Getenv("NO_PROXY")
+	}
+	np := parseNoProxy(noProxy)
+
 	// start servers
 	tcpProxy := tproxy.NewTCPProxy(
 		tproxy.TCPProxyConfig{
-			ListenAddress:    *tcpProxyListenAddress,
-			NoProxyAddresses: strings.Split(*noProxyAddresses, ","),
-			NoProxyDomains:   strings.Split(*noProxyDomains, ","),
+			ListenAddress: *tcpProxyListenAddress,
+			NoProxy:       np,
 		},
 	)
 	if err := tcpProxy.Start(); err != nil {
@@ -110,17 +111,16 @@ func main() {
 			EnableTCP:      *dnsEnableTCP,
 			Endpoint:       *dnsEndpoint,
 			PrivateDNS:     *dnsPrivateServer,
-			NoProxyDomains: strings.Split(*noProxyDomains, ","),
+			NoProxyDomains: np.Domains,
 		},
 	)
 	dnsProxy.Start()
 
 	httpProxy := tproxy.NewHTTPProxy(
 		tproxy.HTTPProxyConfig{
-			ListenAddress:    *httpProxyListenAddress,
-			NoProxyAddresses: strings.Split(*noProxyAddresses, ","),
-			NoProxyDomains:   strings.Split(*noProxyDomains, ","),
-			Verbose:          level == log.DebugLevel,
+			ListenAddress: *httpProxyListenAddress,
+			NoProxy:       np,
+			Verbose:       level == log.DebugLevel,
 		},
 	)
 	if err := httpProxy.Start(); err != nil {
@@ -129,9 +129,8 @@ func main() {
 
 	httpsProxy := tproxy.NewHTTPSProxy(
 		tproxy.HTTPSProxyConfig{
-			ListenAddress:    *httpsProxyListenAddress,
-			NoProxyAddresses: strings.Split(*noProxyAddresses, ","),
-			NoProxyDomains:   strings.Split(*noProxyDomains, ","),
+			ListenAddress: *httpsProxyListenAddress,
+			NoProxy:       np,
 		},
 	)
 	if err := httpsProxy.Start(); err != nil {
@@ -216,4 +215,34 @@ func toPorts(ports string) []int {
 	}
 
 	return p
+}
+
+func parseNoProxy(noProxy string) tproxy.NoProxy {
+	p := strings.Split(noProxy, ",")
+
+	var ipArray []string
+	var cidrArray []*net.IPNet
+	var domainArray []string
+
+	for _, v := range p {
+		ip := net.ParseIP(v)
+		if ip != nil {
+			ipArray = append(ipArray, v)
+			continue
+		}
+
+		_, ipnet, err := net.ParseCIDR(v)
+		if err == nil {
+			cidrArray = append(cidrArray, ipnet)
+			continue
+		}
+
+		domainArray = append(domainArray, v)
+	}
+
+	return tproxy.NoProxy{
+		IPs:     ipArray,
+		CIDRs:   cidrArray,
+		Domains: domainArray,
+	}
 }

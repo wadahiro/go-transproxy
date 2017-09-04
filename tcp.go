@@ -15,9 +15,8 @@ type TCPProxy struct {
 }
 
 type TCPProxyConfig struct {
-	ListenAddress    string
-	NoProxyAddresses []string
-	NoProxyDomains   []string
+	ListenAddress string
+	NoProxy       NoProxy
 }
 
 func NewTCPProxy(c TCPProxyConfig) *TCPProxy {
@@ -50,8 +49,7 @@ func (s TCPProxy) Start() error {
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {
 			var destConn net.Conn
-			if useProxy(s.NoProxyDomains, s.NoProxyAddresses,
-				strings.Split(tc.OrigAddr, ":")[0]) {
+			if useProxy(s.NoProxy, strings.Split(tc.OrigAddr, ":")[0]) {
 
 				destConn, err = pdialer.Dial("tcp", tc.OrigAddr)
 			} else {

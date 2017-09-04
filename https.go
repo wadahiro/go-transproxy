@@ -16,9 +16,8 @@ type HTTPSProxy struct {
 }
 
 type HTTPSProxyConfig struct {
-	ListenAddress    string
-	NoProxyDomains   []string
-	NoProxyAddresses []string
+	ListenAddress string
+	NoProxy       NoProxy
 }
 
 func NewHTTPSProxy(c HTTPSProxyConfig) *HTTPSProxy {
@@ -70,8 +69,7 @@ func (s HTTPSProxy) Start() error {
 			}
 
 			var destConn net.Conn
-			if useProxy(s.NoProxyDomains, s.NoProxyAddresses,
-				strings.Split(origServer, ":")[0]) {
+			if useProxy(s.NoProxy, strings.Split(origServer, ":")[0]) {
 
 				destConn, err = pdialer.Dial("tcp", origServer)
 			} else {

@@ -18,10 +18,9 @@ type HTTPProxy struct {
 }
 
 type HTTPProxyConfig struct {
-	ListenAddress    string
-	NoProxyAddresses []string
-	NoProxyDomains   []string
-	Verbose          bool
+	ListenAddress string
+	NoProxy       NoProxy
+	Verbose       bool
 }
 
 func NewHTTPProxy(c HTTPProxyConfig) *HTTPProxy {
@@ -37,7 +36,7 @@ func (s HTTPProxy) Start() error {
 	}
 
 	proxy := goproxy.NewProxyHttpServer()
-	proxy.Tr.Proxy = httpProxyFromRule(s.NoProxyDomains, s.NoProxyAddresses)
+	proxy.Tr.Proxy = httpProxyFromRule(s.NoProxy)
 	proxy.Verbose = s.Verbose
 
 	proxy.NonproxyHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

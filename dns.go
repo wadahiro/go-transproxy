@@ -89,9 +89,9 @@ func (s *DNSProxy) Start() error {
 		}
 		// Resolve by proxied private DNS
 		for _, domain := range s.NoProxyDomains {
-			log.Debugf("DNS-Proxy: Matching DNS route,  %s : %s", req.Question[0].Name, domain)
+			log.Debugf("DNS-Proxy: Checking DNS route, request: %s, no_proxy: %s", req.Question[0].Name, domain)
 			if strings.HasSuffix(req.Question[0].Name, domain) {
-				log.Debug("DNS-Proxy: Matched! Routing to private DNS, %s : %s", req.Question[0].Name, domain)
+				log.Debugf("DNS-Proxy: Matched! Routing to private DNS, request: %s, no_proxy: %s", req.Question[0].Name, domain)
 				s.handlePrivate(w, req)
 				return
 			}

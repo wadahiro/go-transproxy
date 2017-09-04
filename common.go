@@ -126,10 +126,15 @@ func Pipe(srcConn *TCPConn, destConn net.Conn) {
 	log.Debug("End proxy")
 }
 
-func httpProxyFromRule(noProxyDomains, noProxyAddresses []string) func(*http.Request) (*url.URL, error) {
+type NoProxy struct {
+	IPs     []string
+	CIDRs   []*net.IPNet
+	Domains []string
+}
+
+func httpProxyFromRule(noProxy NoProxy) func(*http.Request) (*url.URL, error) {
 	return func(req *http.Request) (*url.URL, error) {
-		if useProxy(noProxyDomains, noProxyAddresses,
-			strings.Split(req.Host, ":")[0]) {
+		if useProxy(noProxy, strings.Split(req.Host, ":")[0]) {
 
 			return http.ProxyFromEnvironment(req)
 		} else {
@@ -138,17 +143,27 @@ func httpProxyFromRule(noProxyDomains, noProxyAddresses []string) func(*http.Req
 	}
 }
 
-func useProxy(noProxyDomains, noProxyAddresses []string, target string) bool {
-	for _, domain := range noProxyDomains {
-		if strings.HasSuffix(target, domain) {
-			log.Infof("Direct for %s", target)
+func useProxy(noProxy NoProxy, target string) bool {
+	// TODO resolve target domain
+
+	for _, d := range noProxy.Domains {
+		if strings.HasSuffix(target, d) {
+			log.Infof("NO_PROXY: Matched no_proxy domain. Direct for %s", target)
 			return false
 		}
 	}
 
-	for _, addr := range noProxyAddresses {
-		if addr == target {
-			log.Infof("Direct for %s", target)
+	for _, ip := range noProxy.IPs {
+		if ip == target {
+			log.Infof("NO_PROXY: Matched no_proxy ip. Direct for %s", target)
+			return false
+		}
+	}
+
+	for _, cidr := range noProxy.CIDRs {
+		targetIP := net.ParseIP(target)
+		if cidr.Contains(targetIP) {
+			log.Infof("NO_PROXY: Matched no_proxy cidr. Direct for %s", target)
 			return false
 		}
 	}
