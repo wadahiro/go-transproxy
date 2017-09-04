@@ -87,7 +87,7 @@ The document has moved
 
 ## Current Limitation
 
-* HTTP proxy: `no_proxy` only works with IP Address and CIDR if your http client doesnt't add Host header, e.g., HTTP 1.0.
+* HTTP proxy: Only works with HTTP host header, e.g., HTTP 1.0.
 * HTTPS proxy: `no_proxy` only works with IP Address and CIDR if your https client doesn't support [SNI](https://en.wikipedia.org/wiki/Server_Name_Indication).
 * TCP proxy: `no_proxy` only works with IP Address and CIDR.
 
