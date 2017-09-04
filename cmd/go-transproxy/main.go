@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/wadahiro/go-tproxy"
+	"github.com/wadahiro/go-transproxy"
 	"math/rand"
 	"net"
 	"os"
@@ -66,7 +66,7 @@ var (
 func main() {
 	fs.Usage = func() {
 		_, exe := filepath.Split(os.Args[0])
-		fmt.Fprint(os.Stderr, "go-tproxy.\n\n")
+		fmt.Fprint(os.Stderr, "go-transproxy.\n\n")
 		fmt.Fprintf(os.Stderr, "Usage:\n\n  %s [options]\n\nOptions:\n\n", exe)
 		fs.PrintDefaults()
 	}
@@ -175,7 +175,7 @@ func main() {
 	log.Infoln("IPTables: iptables rules deleted.")
 
 	dnsProxy.Stop()
-	log.Infoln("go-tproxy exited.")
+	log.Infoln("go-transproxy exited.")
 }
 
 func toPort(addr string) int {

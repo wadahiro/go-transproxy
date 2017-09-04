@@ -1,29 +1,29 @@
-# go-tproxy
+# go-transproxy
 
 Transparent proxy servers for HTTP, HTTPS, DNS and TCP. 
 This repository is heavily under development.
 
 ## Description
 
-**go-tproxy** provides transparent proxy servers for HTTP, HTTPS, DNS and TCP with single binary.
+**go-transproxy** provides transparent proxy servers for HTTP, HTTPS, DNS and TCP with single binary.
 Nothing needs to setup many tools. Nothing needs to configure iptables.
-**go-tproxy** will start multiple proxy servers for these protocols.
+**go-transproxy** will start multiple proxy servers for these protocols.
 Futheremore, it will configure iptables automatically.
 
 ## Requirement
 
-**go-tproxy** supports only Linux iptables.
+**go-transproxy** supports only Linux iptables.
 
 ## Install
 
 ### Binaly install
-Download from [Releases page](https://github.com/wadahiro/go-tproxy/releases).
+Download from [Releases page](https://github.com/wadahiro/go-transproxy/releases).
 
 ### Source install
 Use Go 1.8.
 
 ```
-go get -u github.com/wadahiro/go-tproxy/...
+go get -u github.com/wadahiro/go-transproxy/...
 ```
 
 ## Usage
@@ -31,7 +31,7 @@ go get -u github.com/wadahiro/go-tproxy/...
 ```
 Usage:
 
-  go-tproxy [options]
+  go-transproxy [options]
 
 Options:
 
@@ -69,8 +69,8 @@ export http_proxy=http://foo:bar@yourproxy.example.org:3128
 # Set no_proxy if you need to access directly for internal
 export no_proxy=example.org,192.168.0.0/24
 
-# Start go-tproxy with admin privileges(sudo)
-sudo go-tproxy -private-dns 192.168.0.100
+# Start go-transproxy with admin privileges(sudo)
+sudo go-transproxy -private-dns 192.168.0.100
 ```
 
 For testing, using docker is easy way. Now, you can access to google from docker container with no proxy configuration as follows.
