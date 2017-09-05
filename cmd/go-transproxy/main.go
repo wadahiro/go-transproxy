@@ -30,8 +30,11 @@ var (
 		"Log level, one of: debug, info, warn, error, fatal, panic",
 	)
 
-	dnsPrivateServer = fs.String("private-dns", "",
+	privateDNS = fs.String("private-dns", "",
 		"Private DNS address for no_proxy targets (IP[:port])")
+
+	publicDNS = fs.String("public-dns", "",
+		"Public DNS address (IP[:port]) Note: Your proxy needs to support CONNECT method to the Public DNS port, and the public DNS needs to support TCP")
 
 	tcpProxyDestPorts = fs.String(
 		"tcp-proxy-dports", "22", "TCP Proxy dports, as `port1,port2,...`",
@@ -53,8 +56,11 @@ var (
 		"dns-proxy-listen", ":3131", "DNS Proxy listen address, as `[host]:port`",
 	)
 
-	dnsEndpoint = fs.String(
-		"dns-endpoint",
+	dnsOverHTTPSEnabled = fs.Bool("dns-over-https-enabled", false,
+		"Use DNS-over-HTTPS service as public DNS")
+
+	dnsOverHTTPSEndpoint = fs.String(
+		"dns-over-https-endpoint",
 		"https://dns.google.com/resolve",
 		"DNS-over-HTTPS endpoint URL",
 	)
@@ -106,12 +112,15 @@ func main() {
 
 	dnsProxy := tproxy.NewDNSProxy(
 		tproxy.DNSProxyConfig{
-			ListenAddress:  *dnsProxyListenAddress,
-			EnableUDP:      *dnsEnableUDP,
-			EnableTCP:      *dnsEnableTCP,
-			Endpoint:       *dnsEndpoint,
-			PrivateDNS:     *dnsPrivateServer,
-			NoProxyDomains: np.Domains,
+			Enabled:             useDNSProxy(),
+			ListenAddress:       *dnsProxyListenAddress,
+			EnableUDP:           *dnsEnableUDP,
+			EnableTCP:           *dnsEnableTCP,
+			Endpoint:            *dnsOverHTTPSEndpoint,
+			PublicDNS:           *publicDNS,
+			PrivateDNS:          *privateDNS,
+			DNSOverHTTPSEnabled: *dnsOverHTTPSEnabled,
+			NoProxyDomains:      np.Domains,
 		},
 	)
 	dnsProxy.Start()
@@ -151,6 +160,7 @@ func main() {
 		HTTPSToPort: httpsToPort,
 		TCPToPort:   tcpToPort,
 		TCPDPorts:   tcpDPorts,
+		PublicDNS:   *publicDNS,
 	})
 	if err != nil {
 		log.Fatalf("IPTables: %s", err.Error())
@@ -176,6 +186,13 @@ func main() {
 
 	dnsProxy.Stop()
 	log.Infoln("go-transproxy exited.")
+}
+
+func useDNSProxy() bool {
+	if *privateDNS == "" && *publicDNS == "" && *dnsOverHTTPSEnabled == false {
+		return false
+	}
+	return true
 }
 
 func toPort(addr string) int {

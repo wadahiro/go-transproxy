@@ -20,20 +20,30 @@ type DNSProxy struct {
 }
 
 type DNSProxyConfig struct {
-	ListenAddress  string
-	EnableUDP      bool
-	EnableTCP      bool
-	Endpoint       string
-	PrivateDNS     string
-	NoProxyDomains []string
+	Enabled             bool
+	ListenAddress       string
+	EnableUDP           bool
+	EnableTCP           bool
+	Endpoint            string
+	PublicDNS           string
+	PrivateDNS          string
+	DNSOverHTTPSEnabled bool
+	NoProxyDomains      []string
 }
 
 func NewDNSProxy(c DNSProxyConfig) *DNSProxy {
 
-	// fix internal dns address
+	// fix dns address
+	if c.PublicDNS != "" {
+		_, _, err := net.SplitHostPort(c.PublicDNS)
+		if err != nil {
+			c.PublicDNS = net.JoinHostPort(c.PublicDNS, "53")
+		}
+	}
 	if c.PrivateDNS != "" {
-		if !strings.HasSuffix(c.PrivateDNS, ":53") {
-			c.PrivateDNS += ":53"
+		_, _, err := net.SplitHostPort(c.PrivateDNS)
+		if err != nil {
+			c.PrivateDNS = net.JoinHostPort(c.PrivateDNS, "53")
 		}
 	}
 
@@ -66,8 +76,21 @@ func NewDNSProxy(c DNSProxyConfig) *DNSProxy {
 }
 
 func (s *DNSProxy) Start() error {
+	if !s.Enabled {
+		log.Infof("DNS-Proxy: Not enabled")
+		return nil
+	}
+
 	log.Infof("DNS-Proxy: Start listener on %s", s.ListenAddress)
-	log.Infof("DNS-Proxy: Use private DNS %s for %s domains", s.PrivateDNS, s.NoProxyDomains)
+	if s.DNSOverHTTPSEnabled {
+		log.Infof("DNS-Proxy: Use DNS-over-HTTPS service as public DNS")
+	}
+	if !s.DNSOverHTTPSEnabled && s.PublicDNS != "" {
+		log.Infof("DNS-Proxy: Use public DNS %s via TCP-Proxy", s.PublicDNS)
+	}
+	if s.PrivateDNS != "" {
+		log.Infof("DNS-Proxy: Use private DNS %s for %s domains", s.PrivateDNS, s.NoProxyDomains)
+	}
 
 	// Prepare external DNS handler
 	provider, err := secop.NewGDNSProvider(s.Endpoint, &secop.GDNSOptions{
@@ -79,7 +102,7 @@ func (s *DNSProxy) Start() error {
 	}
 
 	options := &secop.HandlerOptions{}
-	externalHandler := secop.NewHandler(provider, options)
+	publicOverHTTPSHandler := secop.NewHandler(provider, options)
 
 	// Setup DNS Handler
 	dnsHandle := func(w dns.ResponseWriter, req *dns.Msg) {
@@ -98,7 +121,13 @@ func (s *DNSProxy) Start() error {
 		}
 
 		// Resolve by public DNS over HTTPS over http proxy
-		externalHandler.Handle(w, req)
+		if s.DNSOverHTTPSEnabled {
+			publicOverHTTPSHandler.Handle(w, req)
+			return
+		}
+
+		// Resolve by specified public DNS over http proxy
+		s.handlePublic(w, req)
 	}
 
 	dns.HandleFunc(".", dnsHandle)
@@ -136,6 +165,19 @@ func (s *DNSProxy) Start() error {
 	return nil
 }
 
+func (s *DNSProxy) handlePublic(w dns.ResponseWriter, req *dns.Msg) {
+	log.Debugf("DNS-Proxy: DNS request. %#v, %s", req, req)
+
+	// Need to use TCP because of using TCP-Proxy
+	resp, _, err := s.tcpClient.Exchange(req, s.PublicDNS)
+	if err != nil {
+		log.Warnf("DNS-Proxy: DNS Client failed. %s, %#v, %s", err.Error(), req, req)
+		dns.HandleFailed(w, req)
+		return
+	}
+	w.WriteMsg(resp)
+}
+
 func (s *DNSProxy) handlePrivate(w dns.ResponseWriter, req *dns.Msg) {
 	var c *dns.Client
 	if _, ok := w.RemoteAddr().(*net.TCPAddr); ok {
@@ -156,6 +198,10 @@ func (s *DNSProxy) handlePrivate(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 func (s *DNSProxy) Stop() {
+	if !s.Enabled {
+		return
+	}
+
 	log.Infof("DNS-Proxy: Shutting down DNS service on interrupt\n")
 
 	if s.udpServer != nil {
