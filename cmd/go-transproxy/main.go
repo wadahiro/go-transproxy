@@ -56,8 +56,11 @@ var (
 		"dns-proxy-listen", ":3131", "DNS Proxy listen address, as `[host]:port`",
 	)
 
-	dnsOverHTTPSEnabled = fs.Bool("dns-over-https-enabled", false,
-		"Use DNS-over-HTTPS service as public DNS")
+	dnsOverTCPDisabled = fs.Bool(
+		"dns-over-tcp-disabled", false, "Disable DNS-over-TCP for querying to public DNS")
+
+	dnsOverHTTPSEnabled = fs.Bool(
+		"dns-over-https-enabled", false, "Use DNS-over-HTTPS service as public DNS")
 
 	dnsOverHTTPSEndpoint = fs.String(
 		"dns-over-https-endpoint",
@@ -154,13 +157,18 @@ func main() {
 	tcpToPort := toPort(*tcpProxyListenAddress)
 	tcpDPorts := toPorts(*tcpProxyDestPorts)
 
+	outgoingPublicDNS := *publicDNS
+	if *dnsOverTCPDisabled {
+		outgoingPublicDNS = ""
+	}
+
 	t, err := tproxy.NewIPTables(&tproxy.IPTablesConfig{
 		DNSToPort:   dnsToPort,
 		HTTPToPort:  httpToPort,
 		HTTPSToPort: httpsToPort,
 		TCPToPort:   tcpToPort,
 		TCPDPorts:   tcpDPorts,
-		PublicDNS:   *publicDNS,
+		PublicDNS:   outgoingPublicDNS,
 	})
 	if err != nil {
 		log.Fatalf("IPTables: %s", err.Error())
@@ -184,7 +192,10 @@ func main() {
 	t.Stop()
 	log.Infoln("IPTables: iptables rules deleted.")
 
-	dnsProxy.Stop()
+	if dnsProxy != nil {
+		dnsProxy.Stop()
+	}
+
 	log.Infoln("go-transproxy exited.")
 }
 
