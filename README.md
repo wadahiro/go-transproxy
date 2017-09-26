@@ -39,6 +39,8 @@ Options:
         Use DNS-over-HTTPS service as public DNS
   -dns-over-https-endpoint string
         DNS-over-HTTPS endpoint URL (default "https://dns.google.com/resolve")
+  -dns-over-tcp-disabled
+        Disable DNS-over-TCP for querying to public DNS
   -dns-proxy-listen [host]:port
         DNS Proxy listen address, as [host]:port (default ":3131")
   -dns-tcp
@@ -62,7 +64,7 @@ Options:
 ```
 
 Proxy configuration is used from standard environment variables, `http_proxy`, `https_proxy` and `no_proxy`.
-Also We can use **IP Address**, **CIDR**, **Suffix Domain Name** in `no_proxy`.
+Also you can use **IP Address**, **CIDR**, **Suffix Domain Name** in `no_proxy`.
 
 ### Example 
 
@@ -74,10 +76,10 @@ export http_proxy=http://foo:bar@yourproxy.example.org:3128
 export no_proxy=example.org,192.168.0.0/24
 
 # Start go-transproxy with admin privileges(sudo)
-sudo go-transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8
+sudo -E go-transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8
 ```
 
-For testing, using docker is easy way. Now, we can access to google from docker container with no proxy configuration as follows.
+For testing, using docker is easy way. Now, you can access to google from docker container with no proxy configuration as follows.
 
 ```
 docker run --rm -it centos curl http://www.google.com
@@ -90,10 +92,30 @@ The document has moved
 ```
 
 If your proxy doesn't support CONNECT method to DNS port, it cannot resolve public domain name transparently.
-Fortunately, Google privides [DNS-over-HTTPS service](https://developers.google.com/speed/public-dns/docs/dns-over-https), so we can use this service as public DNS by adding `-dns-over-https-enabled` option instead of `-public-dns` option as below even if your proxy supports CONNECT method to 443 port only.
+Fortunately, Google privides [DNS-over-HTTPS service](https://developers.google.com/speed/public-dns/docs/dns-over-https), so you can use this service as public DNS by adding `-dns-over-https-enabled` option instead of `-public-dns` option as below even if your proxy supports CONNECT method to 443 port only.
 
 ```
-sudo go-transproxy -private-dns 192.168.0.100 -dns-over-https-enabled
+sudo -E go-transproxy -private-dns 192.168.0.100 -dns-over-https-enabled
+```
+
+If you can resolve all domains directly from local LAN, run command without dns related options as below. 
+It disables DNS-Proxy.
+
+```
+sudo -E go-transproxy
+```
+
+If you need to use both public DNS and private DNS, and need to use public DNS directly, run command with `-dns-over-tcp-disabled` option as below.
+It suppresses to insert a iptables OUTPUT rule for DNS over TCP.
+
+```
+sudo -E go-transproxy -private-dns 192.168.0.100 -public-dns 172.16.0.1 -dns-over-tcp-disabled
+```
+
+If you want to use an application which access to internet using port 5000, run command with `-tcp-proxy-dports` option as below.
+
+```
+sudo -E go-transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8 -tcp-proxy-dports 22,5000
 ```
 
 ## Current Limitation
@@ -108,5 +130,5 @@ Licensed under the [MIT](/LICENSE) license.
 
 ## Author
 
-[wadahiro](https://github.com/wadahiro)
+[Hiroyuki Wada](https://github.com/wadahiro)
 

@@ -77,7 +77,7 @@ func NewDNSProxy(c DNSProxyConfig) *DNSProxy {
 
 func (s *DNSProxy) Start() error {
 	if !s.Enabled {
-		log.Infof("DNS-Proxy: Not enabled")
+		log.Infof("DNS-Proxy: Disabled")
 		return nil
 	}
 
@@ -86,10 +86,10 @@ func (s *DNSProxy) Start() error {
 		log.Infof("DNS-Proxy: Use DNS-over-HTTPS service as public DNS")
 	}
 	if !s.DNSOverHTTPSEnabled && s.PublicDNS != "" {
-		log.Infof("DNS-Proxy: Use public DNS %s via TCP-Proxy", s.PublicDNS)
+		log.Infof("DNS-Proxy: Use %s as public DNS", s.PublicDNS)
 	}
 	if s.PrivateDNS != "" {
-		log.Infof("DNS-Proxy: Use private DNS %s for %s domains", s.PrivateDNS, s.NoProxyDomains)
+		log.Infof("DNS-Proxy: Use %s as private DNS for %s domains", s.PrivateDNS, s.NoProxyDomains)
 	}
 
 	// Prepare external DNS handler
