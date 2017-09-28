@@ -2,9 +2,10 @@ package tproxy
 
 import (
 	"fmt"
+	"net/http"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/elazarl/goproxy"
-	"net/http"
 )
 
 func orPanic(err error) {

@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/wadahiro/go-transproxy"
 	"math/rand"
 	"net"
 	"os"
@@ -14,6 +12,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	tproxy "github.com/wadahiro/go-transproxy"
 )
 
 func orPanic(err error) {

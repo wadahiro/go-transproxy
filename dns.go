@@ -1,13 +1,14 @@
 package tproxy
 
 import (
-	log "github.com/Sirupsen/logrus"
-	secop "github.com/fardog/secureoperator"
-	"github.com/miekg/dns"
 	"net"
 	"strings"
 	"sync"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	secop "github.com/fardog/secureoperator"
+	"github.com/miekg/dns"
 )
 
 type DNSProxy struct {
