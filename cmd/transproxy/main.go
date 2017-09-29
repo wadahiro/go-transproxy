@@ -14,7 +14,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	tproxy "github.com/wadahiro/go-transproxy"
+	transproxy "github.com/wadahiro/go-transproxy"
 )
 
 func orPanic(err error) {
@@ -104,8 +104,8 @@ func main() {
 	np := parseNoProxy(noProxy)
 
 	// start servers
-	tcpProxy := tproxy.NewTCPProxy(
-		tproxy.TCPProxyConfig{
+	tcpProxy := transproxy.NewTCPProxy(
+		transproxy.TCPProxyConfig{
 			ListenAddress: *tcpProxyListenAddress,
 			NoProxy:       np,
 		},
@@ -114,8 +114,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	dnsProxy := tproxy.NewDNSProxy(
-		tproxy.DNSProxyConfig{
+	dnsProxy := transproxy.NewDNSProxy(
+		transproxy.DNSProxyConfig{
 			Enabled:             useDNSProxy(),
 			ListenAddress:       *dnsProxyListenAddress,
 			EnableUDP:           *dnsEnableUDP,
@@ -129,8 +129,8 @@ func main() {
 	)
 	dnsProxy.Start()
 
-	httpProxy := tproxy.NewHTTPProxy(
-		tproxy.HTTPProxyConfig{
+	httpProxy := transproxy.NewHTTPProxy(
+		transproxy.HTTPProxyConfig{
 			ListenAddress: *httpProxyListenAddress,
 			NoProxy:       np,
 			Verbose:       level == log.DebugLevel,
@@ -140,8 +140,8 @@ func main() {
 		log.Fatalf(err.Error())
 	}
 
-	httpsProxy := tproxy.NewHTTPSProxy(
-		tproxy.HTTPSProxyConfig{
+	httpsProxy := transproxy.NewHTTPSProxy(
+		transproxy.HTTPSProxyConfig{
 			ListenAddress: *httpsProxyListenAddress,
 			NoProxy:       np,
 		},
@@ -163,7 +163,7 @@ func main() {
 		outgoingPublicDNS = ""
 	}
 
-	t, err := tproxy.NewIPTables(&tproxy.IPTablesConfig{
+	t, err := transproxy.NewIPTables(&transproxy.IPTablesConfig{
 		DNSToPort:   dnsToPort,
 		HTTPToPort:  httpToPort,
 		HTTPSToPort: httpsToPort,
@@ -246,7 +246,7 @@ func toPorts(ports string) []int {
 	return p
 }
 
-func parseNoProxy(noProxy string) tproxy.NoProxy {
+func parseNoProxy(noProxy string) transproxy.NoProxy {
 	p := strings.Split(noProxy, ",")
 
 	var ipArray []string
@@ -269,7 +269,7 @@ func parseNoProxy(noProxy string) tproxy.NoProxy {
 		domainArray = append(domainArray, v)
 	}
 
-	return tproxy.NoProxy{
+	return transproxy.NoProxy{
 		IPs:     ipArray,
 		CIDRs:   cidrArray,
 		Domains: domainArray,
