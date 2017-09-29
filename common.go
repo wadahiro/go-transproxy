@@ -2,15 +2,16 @@ package tproxy
 
 import (
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/cybozu-go/netutil"
-	"github.com/cybozu-go/transocks"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/cybozu-go/netutil"
+	"github.com/cybozu-go/transocks"
 )
 
 type TCPListener struct {

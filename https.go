@@ -1,14 +1,15 @@
 package tproxy
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/inconshreveable/go-vhost"
-	"golang.org/x/net/proxy"
 	"net"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/inconshreveable/go-vhost"
+	"golang.org/x/net/proxy"
 )
 
 type HTTPSProxy struct {

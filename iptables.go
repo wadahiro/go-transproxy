@@ -2,10 +2,11 @@ package tproxy
 
 import (
 	"fmt"
-	"github.com/coreos/go-iptables/iptables"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/coreos/go-iptables/iptables"
 )
 
 const (
