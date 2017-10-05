@@ -20,10 +20,12 @@ Futheremore, it will configure iptables automatically.
 Download from [Releases page](https://github.com/wadahiro/go-transproxy/releases).
 
 ### Source install
-Use Go 1.8.
+Use Go 1.8 and [dep](https://github.com/golang/dep).
 
 ```
-go get -u github.com/wadahiro/go-transproxy/...
+dep ensure
+go build -o transproxy cmd/transproxy/main.go
+chmod +x transproxy
 ```
 
 ## Usage
@@ -31,7 +33,7 @@ go get -u github.com/wadahiro/go-transproxy/...
 ```
 Usage:
 
-  go-transproxy [options]
+  transproxy [options]
 
 Options:
 
@@ -76,7 +78,7 @@ export http_proxy=http://foo:bar@yourproxy.example.org:3128
 export no_proxy=example.org,192.168.0.0/24
 
 # Start go-transproxy with admin privileges(sudo)
-sudo -E go-transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8
+sudo -E transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8
 ```
 
 For testing, using docker is easy way. Now, you can access to google from docker container with no proxy configuration as follows.
@@ -95,27 +97,27 @@ If your proxy doesn't support CONNECT method to DNS port, it cannot resolve publ
 Fortunately, Google privides [DNS-over-HTTPS service](https://developers.google.com/speed/public-dns/docs/dns-over-https), so you can use this service as public DNS by adding `-dns-over-https-enabled` option instead of `-public-dns` option as below even if your proxy supports CONNECT method to 443 port only.
 
 ```
-sudo -E go-transproxy -private-dns 192.168.0.100 -dns-over-https-enabled
+sudo -E transproxy -private-dns 192.168.0.100 -dns-over-https-enabled
 ```
 
 If you can resolve all domains directly from local LAN, run command without dns related options as below. 
 It disables DNS-Proxy.
 
 ```
-sudo -E go-transproxy
+sudo -E transproxy
 ```
 
 If you need to use both public DNS and private DNS, and need to use public DNS directly, run command with `-dns-over-tcp-disabled` option as below.
 It suppresses to insert a iptables OUTPUT rule for DNS over TCP.
 
 ```
-sudo -E go-transproxy -private-dns 192.168.0.100 -public-dns 172.16.0.1 -dns-over-tcp-disabled
+sudo -E transproxy -private-dns 192.168.0.100 -public-dns 172.16.0.1 -dns-over-tcp-disabled
 ```
 
 If you want to use an application which access to internet using port 5000, run command with `-tcp-proxy-dports` option as below.
 
 ```
-sudo -E go-transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8 -tcp-proxy-dports 22,5000
+sudo -E transproxy -private-dns 192.168.0.100 -public-dns 8.8.8.8 -tcp-proxy-dports 22,5000
 ```
 
 ## Current Limitation
