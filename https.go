@@ -1,4 +1,4 @@
-package tproxy
+package transproxy
 
 import (
 	"net"
