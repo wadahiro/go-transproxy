@@ -3,13 +3,13 @@ package transproxy
 import (
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/cybozu-go/netutil"
 	"github.com/cybozu-go/transocks"
 )
@@ -28,7 +28,9 @@ func NewTCPListener(listenAddress string) (*TCPListener, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &TCPListener{l}, nil
+	return &TCPListener{
+		Listener: l,
+	}, nil
 }
 
 func (l *TCPListener) Accept() (net.Conn, error) {
@@ -47,23 +49,27 @@ func (l *TCPListener) Accept() (net.Conn, error) {
 		return c, fmt.Errorf("GetOriginalDST failed - %s", err.Error())
 	}
 
+	log.Printf("debug: OriginalDST: %s", origAddr)
+	log.Printf("debug: LocalAddr: %s", tc.LocalAddr().String())
+	log.Printf("debug: RemoteAddr: %s", tc.RemoteAddr().String())
+
 	return &TCPConn{tc, origAddr.String()}, nil
 }
 
 func ListenTCP(listenAddress string, handler func(tc *TCPConn)) {
 	l, err := NewTCPListener(listenAddress)
 	if err != nil {
-		log.Fatalf("Error listening for tcp connections - %s", err.Error())
+		log.Fatalf("alert: Error listening for tcp connections - %s", err.Error())
 	}
 
 	for {
 		conn, err := l.Accept() // wait here
 		if err != nil {
-			log.Warnf("Error accepting new connection - %s", err.Error())
+			log.Printf("warn: Error accepting new connection - %s", err.Error())
 			return
 		}
 
-		log.Infoln("Accepted new connection")
+		log.Printf("debug: Accepted new connection")
 
 		go func(conn net.Conn) {
 			defer func() {
@@ -86,7 +92,7 @@ var pool = sync.Pool{
 func Pipe(srcConn *TCPConn, destConn net.Conn) {
 	defer destConn.Close()
 
-	log.Debug("Start proxy")
+	log.Printf("debug: Start proxy")
 
 	wg := &sync.WaitGroup{}
 
@@ -124,7 +130,7 @@ func Pipe(srcConn *TCPConn, destConn net.Conn) {
 
 	wg.Wait()
 
-	log.Debug("End proxy")
+	log.Printf("debug: End proxy")
 }
 
 type NoProxy struct {
@@ -149,14 +155,14 @@ func useProxy(noProxy NoProxy, target string) bool {
 
 	for _, d := range noProxy.Domains {
 		if strings.HasSuffix(target, d) {
-			log.Infof("NO_PROXY: Matched no_proxy domain. Direct for %s", target)
+			log.Printf("debug: NO_PROXY: Matched no_proxy domain. Direct for %s", target)
 			return false
 		}
 	}
 
 	for _, ip := range noProxy.IPs {
 		if ip == target {
-			log.Infof("NO_PROXY: Matched no_proxy ip. Direct for %s", target)
+			log.Printf("debug: NO_PROXY: Matched no_proxy ip. Direct for %s", target)
 			return false
 		}
 	}
@@ -164,11 +170,11 @@ func useProxy(noProxy NoProxy, target string) bool {
 	for _, cidr := range noProxy.CIDRs {
 		targetIP := net.ParseIP(target)
 		if cidr.Contains(targetIP) {
-			log.Infof("NO_PROXY: Matched no_proxy cidr. Direct for %s", target)
+			log.Printf("debug: NO_PROXY: Matched no_proxy cidr. Direct for %s", target)
 			return false
 		}
 	}
 
-	log.Infof("Use proxy for %s", target)
+	log.Printf("debug: Use proxy for %s", target)
 	return true
 }

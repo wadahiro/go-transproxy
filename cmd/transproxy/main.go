@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -13,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
+	"github.com/comail/colog"
 	transproxy "github.com/wadahiro/go-transproxy"
 )
 
@@ -89,16 +90,20 @@ func main() {
 	// seed the global random number generator, used in secureoperator
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	level, err := log.ParseLevel(*loglevel)
+	// setup logger
+	colog.SetDefaultLevel(colog.LDebug)
+	colog.SetMinLevel(colog.LInfo)
+	level, err := colog.ParseLevel(*loglevel)
 	if err != nil {
-		log.Fatalf("Invalid log level: %s", err.Error())
+		log.Fatalf("alert: Invalid log level: %s", err.Error())
 	}
-	formatter := &log.TextFormatter{
-		FullTimestamp: true,
-		DisableColors: true,
-	}
-	log.SetFormatter(formatter)
-	log.SetLevel(level)
+	colog.SetMinLevel(level)
+	colog.SetFormatter(&colog.StdFormatter{
+		Colors: true,
+		Flag:   log.Ldate | log.Ltime | log.Lmicroseconds,
+	})
+	colog.ParseFields(true)
+	colog.Register()
 
 	// handling no_proxy environment
 	noProxy := os.Getenv("no_proxy")
@@ -115,7 +120,7 @@ func main() {
 		},
 	)
 	if err := tcpProxy.Start(); err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("alert: %s", err.Error())
 	}
 
 	dnsProxy := transproxy.NewDNSProxy(
@@ -137,11 +142,11 @@ func main() {
 		transproxy.HTTPProxyConfig{
 			ListenAddress: *httpProxyListenAddress,
 			NoProxy:       np,
-			Verbose:       level == log.DebugLevel,
+			Verbose:       level == colog.LDebug,
 		},
 	)
 	if err := httpProxy.Start(); err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("alert: %s", err.Error())
 	}
 
 	httpsProxy := transproxy.NewHTTPSProxy(
@@ -151,7 +156,7 @@ func main() {
 		},
 	)
 	if err := httpsProxy.Start(); err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("alert: %s", err.Error())
 	}
 
 	explicitProxy := transproxy.NewExplicitProxy(
@@ -160,10 +165,10 @@ func main() {
 		},
 	)
 	if err := explicitProxy.Start(); err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf("alert: %s", err.Error())
 	}
 
-	log.Infoln("All proxy servers started.")
+	log.Printf("info: All proxy servers started.")
 
 	dnsToPort := toPort(*dnsProxyListenAddress)
 	httpToPort := toPort(*httpProxyListenAddress)
@@ -185,12 +190,12 @@ func main() {
 		PublicDNS:   outgoingPublicDNS,
 	})
 	if err != nil {
-		log.Fatalf("IPTables: %s", err.Error())
+		log.Printf("alert: %s", err.Error())
 	}
 
 	t.Start()
 
-	log.Infof(`IPTables: iptables rules inserted as follows.
+	log.Printf(`info: iptables rules inserted as follows.
 ---
 %s
 ---`, t.Show())
@@ -200,17 +205,17 @@ func main() {
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	<-sig
 
-	log.Infoln("Proxy servers stopping.")
+	log.Printf("info: Proxy servers stopping.")
 
 	// start shutdown process
 	t.Stop()
-	log.Infoln("IPTables: iptables rules deleted.")
+	log.Printf("info: iptables rules deleted.")
 
 	if dnsProxy != nil {
 		dnsProxy.Stop()
 	}
 
-	log.Infoln("go-transproxy exited.")
+	log.Printf("info: go-transproxy exited.")
 }
 
 func useDNSProxy() bool {
@@ -223,16 +228,16 @@ func useDNSProxy() bool {
 func toPort(addr string) int {
 	array := strings.Split(addr, ":")
 	if len(array) != 2 {
-		log.Fatalf("Invalid address, no port: %s", addr)
+		log.Printf("alert: Invalid address, no port: %s", addr)
 	}
 
 	i, err := strconv.Atoi(array[1])
 	if err != nil {
-		log.Fatalf("Invalid address, the port isn't number: %s", addr)
+		log.Printf("alert: Invalid address, the port isn't number: %s", addr)
 	}
 
 	if i > 65535 || i < 0 {
-		log.Fatalf("Invalid address, the port must be an integer value in the range 0-65535: %s", addr)
+		log.Printf("alert: Invalid address, the port must be an integer value in the range 0-65535: %s", addr)
 	}
 
 	return i
@@ -246,11 +251,11 @@ func toPorts(ports string) []int {
 	for _, v := range array {
 		i, err := strconv.Atoi(v)
 		if err != nil {
-			log.Fatalf("Invalid port, It's not number: %s", ports)
+			log.Printf("alert: Invalid port, It's not number: %s", ports)
 		}
 
 		if i > 65535 || i < 0 {
-			log.Fatalf("Invalid port, It must be an integer value in the range 0-65535: %s", ports)
+			log.Printf("alert: Invalid port, It must be an integer value in the range 0-65535: %s", ports)
 		}
 
 		p = append(p, i)

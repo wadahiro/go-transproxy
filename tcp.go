@@ -1,13 +1,13 @@
 package transproxy
 
 import (
+	"log"
 	"net"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"golang.org/x/net/proxy"
 )
 
@@ -45,10 +45,14 @@ func (s TCPProxy) Start() error {
 
 	npdialer := proxy.Direct
 
-	log.Infof("TCP-Proxy: Start listener on %s", s.ListenAddress)
+	log.Printf("info: Start listener on %s category='TCP-Proxy'", s.ListenAddress)
 
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {
+			// access logging
+			host, _, _ := net.SplitHostPort(tc.RemoteAddr().String())
+			log.Printf("info: category='TCP-Proxy' remoteAddr='%s' method=CONNECT host='%s'", host, tc.OrigAddr)
+
 			var destConn net.Conn
 			// TODO Convert OrigAddr to domain and check useProxy with domain too?
 			if useProxy(s.NoProxy, strings.Split(tc.OrigAddr, ":")[0]) {
@@ -59,7 +63,7 @@ func (s TCPProxy) Start() error {
 			}
 
 			if err != nil {
-				log.Errorf("TCP-Proxy: Failed to connect to destination - %s", err.Error())
+				log.Printf("error: Failed to connect to destination - %s category='TCP-Proxy'", err.Error())
 				return
 			}
 
