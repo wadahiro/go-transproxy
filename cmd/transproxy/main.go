@@ -57,6 +57,10 @@ var (
 		"dns-proxy-listen", ":3131", "DNS Proxy listen address, as `[host]:port`",
 	)
 
+	explicitProxyListenAddress = fs.String(
+		"explicit-proxy-listen", ":3132", "Explicit Proxy listen address for HTTP/HTTPS, as `[host]:port`",
+	)
+
 	dnsOverTCPDisabled = fs.Bool(
 		"dns-over-tcp-disabled", false, "Disable DNS-over-TCP for querying to public DNS")
 
@@ -147,6 +151,15 @@ func main() {
 		},
 	)
 	if err := httpsProxy.Start(); err != nil {
+		log.Fatalf(err.Error())
+	}
+
+	explicitProxy := transproxy.NewExplicitProxy(
+		transproxy.ExplicitProxyConfig{
+			ListenAddress: *explicitProxyListenAddress,
+		},
+	)
+	if err := explicitProxy.Start(); err != nil {
 		log.Fatalf(err.Error())
 	}
 
