@@ -59,7 +59,11 @@ var (
 	)
 
 	explicitProxyListenAddress = fs.String(
-		"explicit-proxy-listen", ":3132", "Explicit Proxy listen address for HTTP/HTTPS, as `[host]:port`",
+		"explicit-proxy-listen", ":3132", "Explicit Proxy listen address for HTTP/HTTPS, as `[host]:port` Note: This proxy doesn't use authentication info of the `http_proxy` and `https_proxy` environment variables",
+	)
+
+	explicitProxyWithAuthListenAddress = fs.String(
+		"explicit-proxy-with-auth-listen", ":3133", "Explicit Proxy with auth listen address for HTTP/HTTPS, as `[host]:port` Note: This proxy uses authentication info of the `http_proxy` and `https_proxy` environment variables",
 	)
 
 	dnsOverTCPDisabled = fs.Bool(
@@ -159,9 +163,20 @@ func main() {
 		log.Fatalf("alert: %s", err.Error())
 	}
 
+	explicitProxyWithAuth := transproxy.NewExplicitProxy(
+		transproxy.ExplicitProxyConfig{
+			ListenAddress:         *explicitProxyWithAuthListenAddress,
+			UseProxyAuthorization: true,
+		},
+	)
+	if err := explicitProxyWithAuth.Start(); err != nil {
+		log.Fatalf("alert: %s", err.Error())
+	}
+
 	explicitProxy := transproxy.NewExplicitProxy(
 		transproxy.ExplicitProxyConfig{
-			ListenAddress: *explicitProxyListenAddress,
+			ListenAddress:         *explicitProxyListenAddress,
+			UseProxyAuthorization: false,
 		},
 	)
 	if err := explicitProxy.Start(); err != nil {
