@@ -17,6 +17,7 @@ const (
 
 type IPTables struct {
 	iptables      *iptables.IPTables
+	dnsEnabled    bool
 	dnsTCPOutRule []string
 	dnsTCPRule    []string
 	dnsUDPRule    []string
@@ -28,6 +29,7 @@ type IPTables struct {
 
 type IPTablesConfig struct {
 	DNSToPort   int
+	DNSEnabled  bool
 	HTTPToPort  int
 	HTTPSToPort int
 	TCPToPort   int
@@ -64,6 +66,7 @@ func NewIPTables(c *IPTablesConfig) (*IPTables, error) {
 
 	return &IPTables{
 		iptables:      t,
+		dnsEnabled:    c.DNSEnabled,
 		dnsTCPOutRule: dnsTCPOutRule,
 		dnsTCPRule:    dnsTCPRule,
 		dnsUDPRule:    dnsUDPRule,
@@ -81,23 +84,23 @@ func (t *IPTables) Start() error {
 	t.Check(t.httpsRule)
 	t.Check(t.tcpRule)
 
-	t.insertRule(t.dnsTCPOutRule)
-	t.insertRule(t.dnsTCPRule)
-	t.insertRule(t.dnsUDPRule)
-	t.insertRule(t.httpRule)
-	t.insertRule(t.httpsRule)
-	t.insertRule(t.tcpRule)
+	t.insertRule(t.dnsTCPOutRule, t.dnsEnabled)
+	t.insertRule(t.dnsTCPRule, t.dnsEnabled)
+	t.insertRule(t.dnsUDPRule, t.dnsEnabled)
+	t.insertRule(t.httpRule, true)
+	t.insertRule(t.httpsRule, true)
+	t.insertRule(t.tcpRule, true)
 
 	return t.err
 }
 
 func (t *IPTables) Stop() error {
-	t.deleteRule(t.dnsTCPOutRule)
-	t.deleteRule(t.dnsTCPRule)
-	t.deleteRule(t.dnsUDPRule)
-	t.deleteRule(t.httpRule)
-	t.deleteRule(t.httpsRule)
-	t.deleteRule(t.tcpRule)
+	t.deleteRule(t.dnsTCPOutRule, t.dnsEnabled)
+	t.deleteRule(t.dnsTCPRule, t.dnsEnabled)
+	t.deleteRule(t.dnsUDPRule, t.dnsEnabled)
+	t.deleteRule(t.httpRule, true)
+	t.deleteRule(t.httpsRule, true)
+	t.deleteRule(t.tcpRule, true)
 
 	return t.err
 }
@@ -105,21 +108,26 @@ func (t *IPTables) Stop() error {
 func (t *IPTables) Show() string {
 	s := fmt.Sprintf(`iptables -t %s -I %s
 iptables -t %s -I %s
-iptables -t %s -I %s
-iptables -t %s -I %s
 iptables -t %s -I %s`,
 		t.tcpRule[0], strings.Join(t.tcpRule[1:], " "),
 		t.httpsRule[0], strings.Join(t.httpsRule[1:], " "),
 		t.httpRule[0], strings.Join(t.httpRule[1:], " "),
-		t.dnsUDPRule[0], strings.Join(t.dnsUDPRule[1:], " "),
-		t.dnsTCPRule[0], strings.Join(t.dnsTCPRule[1:], " "),
 	)
 
-	if len(t.dnsTCPOutRule) > 0 {
+	if t.dnsEnabled {
 		s += fmt.Sprintf(`
+iptables -t %s -I %s
 iptables -t %s -I %s`,
-			t.dnsTCPOutRule[0], strings.Join(t.dnsTCPOutRule[1:], " "),
+			t.dnsUDPRule[0], strings.Join(t.dnsUDPRule[1:], " "),
+			t.dnsTCPRule[0], strings.Join(t.dnsTCPRule[1:], " "),
 		)
+
+		if len(t.dnsTCPOutRule) > 0 {
+			s += fmt.Sprintf(`
+iptables -t %s -I %s`,
+				t.dnsTCPOutRule[0], strings.Join(t.dnsTCPOutRule[1:], " "),
+			)
+		}
 	}
 
 	return s
@@ -140,8 +148,8 @@ func (t *IPTables) Check(rule []string) {
 	}
 }
 
-func (t *IPTables) insertRule(rule []string) {
-	if t.err != nil || len(rule) < 3 {
+func (t *IPTables) insertRule(rule []string, enabled bool) {
+	if !enabled || t.err != nil || len(rule) < 3 {
 		return
 	}
 
@@ -150,9 +158,9 @@ func (t *IPTables) insertRule(rule []string) {
 	}
 }
 
-func (t *IPTables) deleteRule(rule []string) {
+func (t *IPTables) deleteRule(rule []string, enabled bool) {
 	// Don't skip when it has error for deleting all rules
-	if len(rule) < 3 {
+	if !enabled || len(rule) < 3 {
 		return
 	}
 

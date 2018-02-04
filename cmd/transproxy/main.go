@@ -198,6 +198,7 @@ func main() {
 
 	t, err := transproxy.NewIPTables(&transproxy.IPTablesConfig{
 		DNSToPort:   dnsToPort,
+		DNSEnabled:  useDNSProxy(),
 		HTTPToPort:  httpToPort,
 		HTTPSToPort: httpsToPort,
 		TCPToPort:   tcpToPort,
