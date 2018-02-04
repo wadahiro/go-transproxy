@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION=0.3
+VERSION=0.4
 
 DIR=$(cd $(dirname $0); pwd)
 cd $DIR

@@ -10,6 +10,9 @@ Nothing needs to setup many tools. Nothing needs to configure iptables.
 **go-transproxy** will start multiple proxy servers for these protocols.
 Futheremore, it will configure iptables automatically.
 
+**go-transproxy** also provides two types of explicit proxy(not transparent proxy).
+One is a simple proxy delegating to upstream your proxy, another is for adding `Proxy-Authorization` header automatically.
+
 ## Requirement
 
 **go-transproxy** supports only Linux iptables.
@@ -49,6 +52,10 @@ Options:
         DNS Listen on TCP (default true)
   -dns-udp
         DNS Listen on UDP (default true)
+  -explicit-proxy-listen [host]:port
+        Explicit Proxy listen address for HTTP/HTTPS, as [host]:port Note: This proxy doesn't use authentication info of the `http_proxy` and `https_proxy` environment variables (default ":3132")
+  -explicit-proxy-with-auth-listen [host]:port
+        Explicit Proxy with auth listen address for HTTP/HTTPS, as [host]:port Note: This proxy uses authentication info of the `http_proxy` and `https_proxy` environment variables (default ":3133")
   -http-proxy-listen [host]:port
         HTTP Proxy listen address, as [host]:port (default ":3129")
   -https-proxy-listen [host]:port

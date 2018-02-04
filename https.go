@@ -1,13 +1,13 @@
 package transproxy
 
 import (
+	"log"
 	"net"
 	"net/url"
 	"os"
 	"strings"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/inconshreveable/go-vhost"
 	"golang.org/x/net/proxy"
 )
@@ -44,13 +44,13 @@ func (s HTTPSProxy) Start() error {
 
 	npdialer := proxy.Direct
 
-	log.Infof("HTTPS-Proxy: Start listener on %s", s.ListenAddress)
+	log.Printf("info: Start listener on %s category='HTTPS-Proxy'", s.ListenAddress)
 
 	go func() {
 		ListenTCP(s.ListenAddress, func(tc *TCPConn) {
 			tlsConn, err := vhost.TLS(tc)
 			if err != nil {
-				log.Errorf("HTTPS-Proxy: Error handling TLS connection - %s", err.Error())
+				log.Printf("error: Failed handling TLS connection - %s", err.Error())
 				return
 			}
 
@@ -60,14 +60,18 @@ func (s HTTPSProxy) Start() error {
 
 			origServer := tlsConn.Host()
 			if origServer == "" {
-				log.Warn("HTTPS-Proxy: Cannot get SNI, so fallback using `SO_ORIGINAL_DST` or `IP6T_SO_ORIGINAL_DST`")
+				log.Printf("warn: Cannot get SNI, so fallback using `SO_ORIGINAL_DST` or `IP6T_SO_ORIGINAL_DST`")
 				origServer = tc.OrigAddr // IPAddress:Port
 
 				// TODO getting domain from origAddr, then check whether we should use proxy or not
 			} else {
-				log.Debugf("HTTPS-Proxy: SNI: %s", origServer)
+				log.Printf("debug: SNI: %s", origServer)
 				origServer = net.JoinHostPort(origServer, "443")
 			}
+
+			// access logging
+			host, _, _ := net.SplitHostPort(tc.RemoteAddr().String())
+			log.Printf("info: category='HTTPS-Proxy' remoteAddr='%s' method=CONNECT host='%s'", host, origServer)
 
 			var destConn net.Conn
 			if useProxy(s.NoProxy, strings.Split(origServer, ":")[0]) {
@@ -78,7 +82,7 @@ func (s HTTPSProxy) Start() error {
 			}
 
 			if err != nil {
-				log.Warnf("HTTPS-Proxy: Failed to connect to destination - %s", err.Error())
+				log.Printf("warn: Failed to connect to destination - %s", err.Error())
 				return
 			}
 

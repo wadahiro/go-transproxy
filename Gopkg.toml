@@ -21,3 +21,7 @@
 #  version = "2.4.0"
 
 required = ["github.com/cybozu-go/cmd"]
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/comail/colog"
