@@ -54,6 +54,8 @@ Options:
         DNS Listen on UDP (default true)
   -explicit-proxy-listen [host]:port
         Explicit Proxy listen address for HTTP/HTTPS, as [host]:port Note: This proxy doesn't use authentication info of the `http_proxy` and `https_proxy` environment variables (default ":3132")
+  -explicit-proxy-only
+        Boot Explicit Proxies only
   -explicit-proxy-with-auth-listen [host]:port
         Explicit Proxy with auth listen address for HTTP/HTTPS, as [host]:port Note: This proxy uses authentication info of the `http_proxy` and `https_proxy` environment variables (default ":3133")
   -http-proxy-listen [host]:port
