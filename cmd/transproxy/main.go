@@ -66,6 +66,10 @@ var (
 		"explicit-proxy-with-auth-listen", ":3133", "Explicit Proxy with auth listen address for HTTP/HTTPS, as `[host]:port` Note: This proxy uses authentication info of the `http_proxy` and `https_proxy` environment variables",
 	)
 
+	explicitProxyOnly = fs.Bool(
+		"explicit-proxy-only", false, "Boot Explicit Proxies only",
+	)
+
 	dnsOverTCPDisabled = fs.Bool(
 		"dns-over-tcp-disabled", false, "Disable DNS-over-TCP for querying to public DNS")
 
@@ -94,6 +98,26 @@ func main() {
 	// seed the global random number generator, used in secureoperator
 	rand.Seed(time.Now().UTC().UnixNano())
 
+	if *explicitProxyOnly {
+		startExplicitProxyOnly()
+	} else {
+		startAllProxy()
+	}
+}
+
+func startExplicitProxyOnly() {
+	startExplicitProxy()
+
+	// serve until exit
+	sig := make(chan os.Signal)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	<-sig
+
+	log.Printf("info: Proxy servers stopping.")
+	log.Printf("info: go-transproxy exited.")
+}
+
+func startAllProxy() {
 	// setup logger
 	colog.SetDefaultLevel(colog.LDebug)
 	colog.SetMinLevel(colog.LInfo)
@@ -114,8 +138,8 @@ func main() {
 	if noProxy == "" {
 		noProxy = os.Getenv("NO_PROXY")
 	}
-	np := parseNoProxy(noProxy)
 
+	np := parseNoProxy(noProxy)
 	// start servers
 	tcpProxy := transproxy.NewTCPProxy(
 		transproxy.TCPProxyConfig{
@@ -163,25 +187,7 @@ func main() {
 		log.Fatalf("alert: %s", err.Error())
 	}
 
-	explicitProxyWithAuth := transproxy.NewExplicitProxy(
-		transproxy.ExplicitProxyConfig{
-			ListenAddress:         *explicitProxyWithAuthListenAddress,
-			UseProxyAuthorization: true,
-		},
-	)
-	if err := explicitProxyWithAuth.Start(); err != nil {
-		log.Fatalf("alert: %s", err.Error())
-	}
-
-	explicitProxy := transproxy.NewExplicitProxy(
-		transproxy.ExplicitProxyConfig{
-			ListenAddress:         *explicitProxyListenAddress,
-			UseProxyAuthorization: false,
-		},
-	)
-	if err := explicitProxy.Start(); err != nil {
-		log.Fatalf("alert: %s", err.Error())
-	}
+	startExplicitProxy()
 
 	log.Printf("info: All proxy servers started.")
 
@@ -231,6 +237,28 @@ func main() {
 	}
 
 	log.Printf("info: go-transproxy exited.")
+}
+
+func startExplicitProxy() {
+	explicitProxyWithAuth := transproxy.NewExplicitProxy(
+		transproxy.ExplicitProxyConfig{
+			ListenAddress:         *explicitProxyWithAuthListenAddress,
+			UseProxyAuthorization: true,
+		},
+	)
+	if err := explicitProxyWithAuth.Start(); err != nil {
+		log.Fatalf("alert: %s", err.Error())
+	}
+
+	explicitProxy := transproxy.NewExplicitProxy(
+		transproxy.ExplicitProxyConfig{
+			ListenAddress:         *explicitProxyListenAddress,
+			UseProxyAuthorization: false,
+		},
+	)
+	if err := explicitProxy.Start(); err != nil {
+		log.Fatalf("alert: %s", err.Error())
+	}
 }
 
 func useDNSProxy() bool {
