@@ -98,26 +98,6 @@ func main() {
 	// seed the global random number generator, used in secureoperator
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	if *explicitProxyOnly {
-		startExplicitProxyOnly()
-	} else {
-		startAllProxy()
-	}
-}
-
-func startExplicitProxyOnly() {
-	startExplicitProxy()
-
-	// serve until exit
-	sig := make(chan os.Signal)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-	<-sig
-
-	log.Printf("info: Proxy servers stopping.")
-	log.Printf("info: go-transproxy exited.")
-}
-
-func startAllProxy() {
 	// setup logger
 	colog.SetDefaultLevel(colog.LDebug)
 	colog.SetMinLevel(colog.LInfo)
@@ -133,6 +113,26 @@ func startAllProxy() {
 	colog.ParseFields(true)
 	colog.Register()
 
+	if *explicitProxyOnly {
+		startExplicitProxyOnly(level)
+	} else {
+		startAllProxy(level)
+	}
+}
+
+func startExplicitProxyOnly(level colog.Level) {
+	startExplicitProxy()
+
+	// serve until exit
+	sig := make(chan os.Signal)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+	<-sig
+
+	log.Printf("info: Proxy servers stopping.")
+	log.Printf("info: go-transproxy exited.")
+}
+
+func startAllProxy(level colog.Level) {
 	// handling no_proxy environment
 	noProxy := os.Getenv("no_proxy")
 	if noProxy == "" {

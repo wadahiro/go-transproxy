@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 type ExplicitProxy struct {
@@ -39,11 +40,14 @@ func (s ExplicitProxy) Start() error {
 	if err != nil {
 		return err
 	}
-	s.user = u.User.Username()
 
 	if s.UseProxyAuthorization {
 		s.category = "Explicit-Proxy(Auth)"
 
+		if u.User == nil {
+			log.Printf("info: Not Started because of no proxy user category='%s'", s.category)
+			return nil
+		}
 		// For HTTPS
 		s.proxyAuthorization = "Basic " + base64.StdEncoding.EncodeToString([]byte(u.User.String()))
 		s.proxyHost = u.Host
@@ -104,26 +108,44 @@ func (s ExplicitProxy) accessLog(r *http.Request) {
 }
 
 func (s ExplicitProxy) handleHttps(w http.ResponseWriter, r *http.Request) {
-	hj, _ := w.(http.Hijacker)
-	if proxyConn, err := net.Dial("tcp", s.proxyHost); err != nil {
-		log.Printf("error: %s", err)
-	} else if clientConn, _, err := hj.Hijack(); err != nil {
-		proxyConn.Close()
-		log.Printf("error: %s", err)
-	} else {
-		if s.UseProxyAuthorization {
-			r.Header.Set("Proxy-Authorization", s.proxyAuthorization)
-		}
-		r.Write(proxyConn)
-		go func() {
-			io.Copy(clientConn, proxyConn)
-			proxyConn.Close()
-		}()
-		go func() {
-			io.Copy(proxyConn, clientConn)
-			clientConn.Close()
-		}()
+	destConn, err := net.DialTimeout("tcp", s.proxyHost, 10*time.Second)
+	if err != nil {
+		log.Printf("error: %s category='%s'", err, s.category)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
 	}
+
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		log.Printf("error: Hijacking not supported category='%s'", s.category)
+		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
+		destConn.Close()
+		return
+	}
+	clientConn, _, err := hj.Hijack()
+	if err != nil {
+		log.Printf("error: %s category='%s'", err, s.category)
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		destConn.Close()
+		return
+	}
+
+	if s.UseProxyAuthorization {
+		r.Header.Set("Proxy-Authorization", s.proxyAuthorization)
+	}
+
+	r.Write(destConn)
+
+	go transfer(clientConn, destConn)
+	go transfer(destConn, clientConn)
+
+	log.Printf("debug: End proxy category='%s'", s.category)
+}
+
+func transfer(destination io.WriteCloser, source io.ReadCloser) {
+	defer destination.Close()
+	defer source.Close()
+	io.Copy(destination, source)
 }
 
 func (s ExplicitProxy) handleHttp(w http.ResponseWriter, r *http.Request) {
