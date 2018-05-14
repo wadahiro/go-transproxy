@@ -40,6 +40,8 @@ Usage:
 
 Options:
 
+  -disable-iptables
+    	Disable automatic iptables configuration
   -dns-over-https-enabled
         Use DNS-over-HTTPS service as public DNS
   -dns-over-https-endpoint string

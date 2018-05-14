@@ -84,6 +84,7 @@ var (
 
 	dnsEnableTCP = fs.Bool("dns-tcp", true, "DNS Listen on TCP")
 	dnsEnableUDP = fs.Bool("dns-udp", true, "DNS Listen on UDP")
+	disableIPTables = fs.Bool("disable-iptables", false, "Disable automatic iptables configuration")
 )
 
 func main() {
@@ -202,24 +203,29 @@ func startAllProxy(level colog.Level) {
 		outgoingPublicDNS = ""
 	}
 
-	t, err := transproxy.NewIPTables(&transproxy.IPTablesConfig{
-		DNSToPort:   dnsToPort,
-		HTTPToPort:  httpToPort,
-		HTTPSToPort: httpsToPort,
-		TCPToPort:   tcpToPort,
-		TCPDPorts:   tcpDPorts,
-		PublicDNS:   outgoingPublicDNS,
-	})
-	if err != nil {
-		log.Printf("alert: %s", err.Error())
-	}
+	var t *transproxy.IPTables
+	var err error
 
-	t.Start()
+	if !*disableIPTables {
+		t, err = transproxy.NewIPTables(&transproxy.IPTablesConfig{
+			DNSToPort:   dnsToPort,
+			HTTPToPort:  httpToPort,
+			HTTPSToPort: httpsToPort,
+			TCPToPort:   tcpToPort,
+			TCPDPorts:   tcpDPorts,
+			PublicDNS:   outgoingPublicDNS,
+		})
+		if err != nil {
+			log.Printf("alert: %s", err.Error())
+		}
 
-	log.Printf(`info: iptables rules inserted as follows.
+		t.Start()
+
+		log.Printf(`info: iptables rules inserted as follows.
 ---
 %s
 ---`, t.Show())
+	}
 
 	// serve until exit
 	sig := make(chan os.Signal)
@@ -229,8 +235,10 @@ func startAllProxy(level colog.Level) {
 	log.Printf("info: Proxy servers stopping.")
 
 	// start shutdown process
-	t.Stop()
-	log.Printf("info: iptables rules deleted.")
+	if !*disableIPTables {
+		t.Stop()
+		log.Printf("info: iptables rules deleted.")
+	}
 
 	if dnsProxy != nil {
 		dnsProxy.Stop()
