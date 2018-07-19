@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
@@ -36,7 +35,7 @@ func NewExplicitProxy(c ExplicitProxyConfig) *ExplicitProxy {
 }
 
 func (s ExplicitProxy) Start() error {
-	u, err := url.Parse(os.Getenv("http_proxy"))
+	u, err := url.Parse(GetProxyEnv("http_proxy"))
 	if err != nil {
 		return err
 	}

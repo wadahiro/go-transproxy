@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -33,7 +32,7 @@ func (s TCPProxy) Start() error {
 		KeepAlive: 3 * time.Minute,
 		DualStack: true,
 	}
-	u, err := url.Parse(os.Getenv("http_proxy"))
+	u, err := url.Parse(GetProxyEnv("http_proxy"))
 	if err != nil {
 		return err
 	}

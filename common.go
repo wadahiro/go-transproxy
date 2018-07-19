@@ -12,6 +12,7 @@ import (
 
 	"github.com/cybozu-go/netutil"
 	"github.com/cybozu-go/transocks"
+	"os"
 )
 
 type TCPListener struct {
@@ -177,4 +178,12 @@ func useProxy(noProxy NoProxy, target string) bool {
 
 	log.Printf("debug: Use proxy for %s", target)
 	return true
+}
+
+func GetProxyEnv(key string) string {
+	env := os.Getenv(key)
+	if env == "" {
+		env = os.Getenv(strings.ToUpper(key))
+	}
+	return env
 }
