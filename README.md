@@ -23,12 +23,10 @@ One is a simple proxy delegating to upstream your proxy, another is for adding `
 Download from [Releases page](https://github.com/wadahiro/go-transproxy/releases).
 
 ### Source install
-Use Go 1.8 and [dep](https://github.com/golang/dep).
+Use Go 1.13 for the build.
 
 ```
-dep ensure
-go build -o transproxy cmd/transproxy/main.go
-chmod +x transproxy
+make
 ```
 
 ## Usage
