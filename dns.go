@@ -102,7 +102,7 @@ func (s *DNSProxy) Start() error {
 	})
 
 	if err != nil {
-		log.Fatal("alert: %s category='DNS-Proxy'", err)
+		log.Fatalf("alert: %s category='DNS-Proxy'", err)
 	}
 
 	options := &secop.HandlerOptions{}
@@ -161,12 +161,12 @@ func (s *DNSProxy) Start() error {
 	go func() {
 		if s.udpServer != nil {
 			if err := s.udpServer.ListenAndServe(); err != nil {
-				log.Fatal("alert: %s", err.Error())
+				log.Fatalf("alert: %s", err.Error())
 			}
 		}
 		if s.tcpServer != nil {
 			if err := s.tcpServer.ListenAndServe(); err != nil {
-				log.Fatal("alert: %s", err.Error())
+				log.Fatalf("alert: %s", err.Error())
 			}
 		}
 	}()
