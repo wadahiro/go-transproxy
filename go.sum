@@ -1,3 +1,5 @@
+github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
+github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Sirupsen/logrus v1.0.2-0.20170713114250-a3f95b5c4235 h1:m190Z0077f/CDftqBTbt7IlAqkmvkPEafq0byCfeisg=
 github.com/Sirupsen/logrus v1.0.2-0.20170713114250-a3f95b5c4235/go.mod h1:rmk17hk6i8ZSAJkSDa7nOxamrG+SP4P0mm+DAvExv4U=
 github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c h1:bzYQ6WpR+t35/y19HUkolcg7SYeWZ15IclC9Z4naGHI=
@@ -12,6 +14,8 @@ github.com/cybozu-go/netutil v1.1.0 h1:9o33zFrGqXpexOX3hlrN4ebYwQvThr9UP33md7mGN
 github.com/cybozu-go/netutil v1.1.0/go.mod h1:UiOBRGyD1OiABE7Hk2bXac0mqDwuG4xMQc7T5XidXRA=
 github.com/cybozu-go/transocks v1.0.0 h1:IyemjpF4TA/5qJd2royU4fjWBwpJKmFpi1tvCkE39dg=
 github.com/cybozu-go/transocks v1.0.0/go.mod h1:CXrq7WldMyROCLqg8JLxvhxxr8b8inYS/GjJ08b9UyQ=
+github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/elazarl/goproxy v0.0.0-20170413182129-aacba83f36a5 h1:6hndtckUKiV+txASiPN72sRWuHJQycm6B9BI18YYmzs=
 github.com/elazarl/goproxy v0.0.0-20170413182129-aacba83f36a5/go.mod h1:/Zj4wYkgs4iZTTu3o/KG3Itv/qCCa8VVMlb3i9OVuzc=
 github.com/fardog/secureoperator v2.1.0+incompatible h1:l0nfc8iv87iAa6FBgRnH9wnFkfKHMnVJhQFVhaLZfQ8=
@@ -20,8 +24,18 @@ github.com/inconshreveable/go-vhost v0.0.0-20160627193104-06d84117953b h1:IpLPmn
 github.com/inconshreveable/go-vhost v0.0.0-20160627193104-06d84117953b/go.mod h1:aA6DnFhALT3zH0y+A39we+zbrdMC2N0X/q21e6FI0LU=
 github.com/miekg/dns v0.0.0-20170812192144-0598bd43cf51 h1:hZ1ngpLE9G7RaoMM6LlixdiCedgR4GhqzOYBcarqaho=
 github.com/miekg/dns v0.0.0-20170812192144-0598bd43cf51/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
-github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
-github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 golang.org/x/net v0.0.0-20170809000501-1c05540f6879 h1:0rFa7EaCGdQPmZVbo9F7MNF65b8dyzS6EUnXjs9Cllk=
 golang.org/x/net v0.0.0-20170809000501-1c05540f6879/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
+golang.org/x/sys v0.0.0-20170814191752-2d3e384235de h1:N75vIrvsMJr9dMcp3gZ3w/EdSl8/J9rKpkkgTWfjT7s=
 golang.org/x/sys v0.0.0-20170814191752-2d3e384235de/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
